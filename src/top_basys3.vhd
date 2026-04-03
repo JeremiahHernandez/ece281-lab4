@@ -99,13 +99,39 @@ begin
             go_up_down  => sw(0),
             o_floor     => w_floor1
         );
+        elevator_2: elevator_controller_fsm
+        port map (
+            i_clk       => w_clk_fsm,
+            i_reset     => w_reset_fsm,
+            is_stopped  => sw(14), -- [cite: 77]
+            go_up_down  => sw(15), -- [cite: 77]
+            o_floor     => w_floor2
+        );
+        display_tdm: TDM4
+        generic map ( k_WIDTH => 4 )
+        port map (
+            i_clk   => w_clk_tdm,
+            i_reset => '0', -- TDM reset not strictly required by manual
+            i_D3    => x"F",     -- Display 3 (Leftmost): "F" [cite: 80]
+            i_D2    => w_floor2, -- Display 2: Elevator 2 [cite: 79]
+            i_D1    => x"F",     -- Display 1: "F" [cite: 80]
+            i_D0    => w_floor1, -- Display 0 (Rightmost): Elevator 1 [cite: 45]
+            o_data  => w_tdm_data,
+            o_sel   => an
+        );
+        display_decoder: sevenseg_decoder
+        port map (
+            i_Hex   => w_tdm_data,
+            o_seg_n => seg
+        );
 	
 	-- CONCURRENT STATEMENTS ----------------------------
 	
 	-- LED 15 gets the FSM slow clock signal. The rest are grounded.
-	
+	led(15) <= w_clk_fsm;
 	-- leave unused switches UNCONNECTED. Ignore any warnings this causes.
-	
+	led(14 downto 0) <= (others => '0');
 	-- reset signals
-	
+	w_reset_fsm <= btnU or btnR;
+    w_reset_clk <= btnU or btnL;
 end top_basys3_arch;
