@@ -25,6 +25,13 @@ end top_basys3;
 architecture top_basys3_arch of top_basys3 is
 
     -- signal declarations
+    signal w_clk_fsm: std_logic;
+    signal w_clk_tdm: std_logic;
+    signal w_reset_fsm: std_logic;
+    signal w_reset_clk: std_logic;
+    signal w_floor1: std_logic_vector(3 downto 0);
+    signal w_floor2: std_logic_vector(3 downto 0);
+    signal w_tdm_data: std_logic_vector(3 downto 0);
     
   
 	-- component declarations
@@ -70,7 +77,28 @@ architecture top_basys3_arch of top_basys3 is
 	
 begin
 	-- PORT MAPS ----------------------------------------
-    	
+    fsm_clk_div: clock_divider
+        generic map ( k_DIV => 25000000 )
+        port map (
+            i_clk   => clk,
+            i_reset => w_reset_clk,
+            o_clk   => w_clk_fsm
+        );
+        tdm_clk_div: clock_divider
+        generic map ( k_DIV => 100000 )
+        port map (
+            i_clk   => clk,
+            i_reset => w_reset_clk,
+            o_clk   => w_clk_tdm
+        );
+        elevator_1: elevator_controller_fsm
+        port map (
+            i_clk       => w_clk_fsm,
+            i_reset     => w_reset_fsm,
+            is_stopped  => sw(1),
+            go_up_down  => sw(0),
+            o_floor     => w_floor1
+        );
 	
 	-- CONCURRENT STATEMENTS ----------------------------
 	
